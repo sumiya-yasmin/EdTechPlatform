@@ -56,3 +56,19 @@ export const getCourseByIdService = async (id) => {
   if (!course) throw new Error('Course not found');
   return course;
 };
+
+export const updateCourseService = async (id, updateData) => {
+  const course = await Course.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true 
+  });
+
+  if (!course) throw new Error('Course not found');
+  return course;
+};
+
+export const deleteCourseService = async (id) => {
+  const course = await Course.findByIdAndDelete(id);
+  if (!course) throw new Error('Course not found');
+  return { message: 'Course removed' };
+};
