@@ -30,7 +30,7 @@ export const getCourseById = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
-    const updatedCourse = await courseService.updateCourseService(req.params.id, req.body);
+    const updatedCourse = await courseServices.updateCourseService(req.params.id, req.body);
     res.status(200).json(updatedCourse);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -39,7 +39,7 @@ export const updateCourse = async (req, res) => {
 
 export const deleteCourse = async (req, res) => {
   try {
-    const result = await courseService.deleteCourseService(req.params.id);
+    const result = await courseServices.deleteCourseService(req.params.id);
     res.status(200).json(result);
   } catch (error) {
     res.status(404).json({ message: error.message });
