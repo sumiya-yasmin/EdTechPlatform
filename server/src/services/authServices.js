@@ -14,7 +14,7 @@ export const registerUserService = async ({ name, email, password, role }) => {
     throw new Error('User already exists');
   }
 
-  const user = await user.create({ name, email, password, role });
+  const user = await User.create({ name, email, password, role });
 
   return {
     _id: user._id,
