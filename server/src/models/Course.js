@@ -40,6 +40,12 @@ const courseSchema = new mongoose.Schema({
     enum: ['Beginner', 'Intermediate', 'Advanced'],
     default: 'Beginner'
   },
+  batches: [{
+    title: { type: String, required: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date },
+    enrollmentClosed: { type: Boolean, default: false }
+  }],
   syllabus: [lessonSchema], 
   
   studentsEnrolled: { 
