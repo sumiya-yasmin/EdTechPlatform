@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllCoursesApi, enrollCourseApi } from '../api/course';
+import { getAllCoursesApi, enrollCourseApi, getCourseByIdApi } from '../api/course';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { CourseParams } from '../types/course';
@@ -9,6 +9,14 @@ export const useCourses = (params?: CourseParams) => {
   return useQuery({
     queryKey: ['courses', params], 
     queryFn: () => getAllCoursesApi(params),
+  });
+};
+
+export const useCourse = (id: string | null) => {
+  return useQuery({
+    queryKey: ['course', id],
+    queryFn: () => getCourseByIdApi(id!),
+    enabled: !!id, 
   });
 };
 
