@@ -7,6 +7,12 @@ const lessonSchema = new mongoose.Schema({
   isFree: { type: Boolean, default: false } 
 });
 
+const questionSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  options: [{ type: String, required: true }],
+  correctAnswer: { type: String, required: true }
+});
+
 const courseSchema = new mongoose.Schema({
   title: { 
     type: String, 
@@ -39,6 +45,12 @@ const courseSchema = new mongoose.Schema({
     type: String,
     enum: ['Beginner', 'Intermediate', 'Advanced'],
     default: 'Beginner'
+  },
+  quiz: [questionSchema],
+  assignment: {
+    title: { type: String, default: 'Final Project' },
+    instructions: { type: String, default: 'Upload your Google Drive link below.' },
+    totalPoints: { type: Number, default: 100 }
   },
   batches: [{
     title: { type: String, required: true },
