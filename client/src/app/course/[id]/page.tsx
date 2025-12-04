@@ -9,7 +9,7 @@ import Navbar from '@/src/components/Navbar';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Lock, PlayCircle, Clock, Edit } from 'lucide-react'; 
+import { Lock, PlayCircle, Clock, Edit, CheckCircle } from 'lucide-react'; 
 import toast from 'react-hot-toast';
 import { Lesson } from '@/src/types/course';
 
@@ -19,7 +19,7 @@ export default function CourseDetailsPage() {
   const courseId = params.id as string;
 
   const { data: course, isLoading } = useCourse(courseId);
-  const { enrollments } = useStudentDashboard();
+  const { enrollments, markComplete, isMarking } = useStudentDashboard();
   const { mutate: enroll, isPending: isEnrolling } = useEnroll();
 
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -36,6 +36,10 @@ export default function CourseDetailsPage() {
 
   const isEnrolled = enrollments?.some((e) => e.course._id === courseId);
   const enrollment = enrollments?.find((e) => e.course._id === courseId);
+
+  const isLessonCompleted = (lessonId: string) => {
+    return enrollment?.completedLessons.includes(lessonId);
+  };
 
   const getYouTubeId = (url: string) => {
     if (!url) return null;
@@ -100,6 +104,33 @@ export default function CourseDetailsPage() {
                 </div>
               )}
             </div>
+        
+               {activeLesson && isEnrolled && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm gap-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">{activeLesson.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {isLessonCompleted(activeLesson._id) 
+                      ? 'You have completed this lesson.' 
+                      : 'Mark this lesson as done to update your progress.'}
+                  </p>
+                </div>
+                
+                {isLessonCompleted(activeLesson._id) ? (
+                  <Button variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 cursor-default">
+                    <CheckCircle className="w-4 h-4 mr-2" /> Completed
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => markComplete({ courseId, lessonId: activeLesson._id })}
+                    disabled={isMarking}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isMarking ? 'Updating...' : 'Mark as Complete'}
+                  </Button>
+                )}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">{course.category}</Badge>
@@ -125,7 +156,6 @@ export default function CourseDetailsPage() {
               </CardHeader>
               <CardContent>
                 {isAdmin ? (
-                  /* ADMIN VIEW */
                   <div className="space-y-4">
                     <div className="p-4 bg-gray-100 rounded-lg text-sm text-gray-600 text-center">
                       You are viewing this course as an Admin. <br/>
@@ -140,7 +170,6 @@ export default function CourseDetailsPage() {
                     </Button>
                   </div>
                 ) : isEnrolled ? (
-                  /* ENROLLED STUDENT VIEW */
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm mb-1">
                       <span>{enrollment?.progress || 0}% Completed</span>
@@ -164,7 +193,7 @@ export default function CourseDetailsPage() {
                     >
                       {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
                     </Button>
-                    <p className="text-xs text-center text-gray-500">30-Day Money-Back Guarantee</p>
+                    <p className="text-xs text-center text-gray-500">Enroll before the seats are filled</p>
                   </div>
                 )}
               </CardContent>
@@ -179,6 +208,7 @@ export default function CourseDetailsPage() {
                   {course.syllabus?.map((lesson, index) => {
                     const isLocked = !isEnrolled && !lesson.isFree && !isAdmin;
                     const isActive = activeLesson?._id === lesson._id;
+                    const isCompleted = isLessonCompleted(lesson._id);
 
                     return (
                       <div 
@@ -186,15 +216,18 @@ export default function CourseDetailsPage() {
                         onClick={() => handleLessonClick(lesson)}
                         className={`p-4 flex items-center gap-3 cursor-pointer transition-colors hover:bg-gray-50 ${isActive ? 'bg-blue-50 border-l-4 border-blue-600' : ''}`}
                       >
-                        <div className="flex-shrink-0 text-gray-400">
-                          {isLocked ? (
+                        <div className="shrink-0 text-gray-400">
+                          {isCompleted ? (
+                             <CheckCircle className="w-5 h-5 text-green-500" />
+                          ) :
+                          isLocked ? (
                             <Lock className="w-5 h-5" />
                           ) : (
                             <PlayCircle className={`w-5 h-5 ${isActive ? 'text-blue-600' : ''}`} />
                           )}
                         </div>
                         
-                        <div className="flex-grow">
+                        <div className="grow">
                           <p className={`text-sm font-medium ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>
                             {lesson.title}
                           </p>
