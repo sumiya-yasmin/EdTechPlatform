@@ -10,7 +10,7 @@ import { Input } from '@/src/components/ui/input';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Label } from '@/src/components/ui/label';
-import { ArrowLeft, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, FileText, HelpCircle } from 'lucide-react';
 import Navbar from '@/src/components/Navbar';
 import { useCreateCourse, useUpdateCourse } from '@/src/hooks/useAdmin';
 
@@ -36,7 +36,9 @@ export default function CreateCoursePage() {
       thumbnail: '',
       instructor: 'Admin User',
       syllabus: [{ title: 'Introduction', videoUrl: '', duration: 10, isFree: true }],
-      batches: [{ title: 'Batch 1', startDate: '' }] 
+      batches: [{ title: 'Batch 1', startDate: '' }],
+      quiz: [{ question: '', optionsString: '', correctAnswer: '' }],
+      assignment: { title: 'Final Project', instructions: 'Submit your work here.', totalPoints: 100 },
     }
   });
 
@@ -49,9 +51,16 @@ export default function CreateCoursePage() {
         startDate: b.startDate.split('T')[0]
       })) || [{ title: 'Batch 1', startDate: '' }];
 
+       const formattedQuiz = courseData.quiz?.map((q: any) => ({
+        ...q,
+        optionsString: q.options.join(', ') 
+      })) || [];
+
       reset({
         ...existingCourse,
-        batches: formattedBatches
+        batches: formattedBatches,
+        quiz: formattedQuiz,
+        assignment: courseData.assignment 
       });
     }
   }, [existingCourse, isEditMode, reset]);
@@ -66,10 +75,22 @@ export default function CreateCoursePage() {
     name: "batches"
   });
 
+  const { fields: quizFields, append: addQuiz, remove: removeQuiz } = useFieldArray({ control, name: "quiz" });
+
   const onSubmit = (data: any) => {
+    const transformedQuiz = data.quiz?.map((q: any) => ({
+      question: q.question,
+      correctAnswer: q.correctAnswer.trim(),
+      options: q.optionsString.split(',').map((opt: string) => opt.trim())
+    }));
     const formattedData = { 
         ...data, 
         price: Number(data.price),
+        quiz: transformedQuiz,
+        assignment: {
+            ...data.assignment,
+            totalPoints: Number(data.assignment.totalPoints)
+        }
     };
 
     if (isEditMode) {
@@ -132,6 +153,18 @@ export default function CreateCoursePage() {
             </CardContent>
           </Card>
 
+          <Card className="mb-8 border-green-200">
+            <CardHeader className="bg-green-50/50 flex flex-row items-center gap-2">
+                <FileText className="h-5 w-5 text-green-600"/>
+                <CardTitle>Assignment Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+                <div className="space-y-2"><Label>Assignment Title</Label><Input {...register('assignment.title')} /></div>
+                <div className="space-y-2"><Label>Instructions</Label><Textarea {...register('assignment.instructions')} /></div>
+                <div className="space-y-2"><Label>Max Points</Label><Input type="number" {...register('assignment.totalPoints')} /></div>
+            </CardContent>
+          </Card>
+
           <Card className="mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Syllabus & Videos</CardTitle>
@@ -179,6 +212,25 @@ export default function CreateCoursePage() {
                   <Button type="button" variant="destructive" size="icon" onClick={() => removeBatch(index)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8 border-blue-200">
+            <CardHeader className="bg-blue-50/50 flex flex-row justify-between">
+              <div className="flex items-center gap-2"><HelpCircle className="h-5 w-5 text-blue-600" /><CardTitle>Quiz Builder</CardTitle></div>
+              <Button type="button" size="sm" onClick={() => addQuiz({ question: '', optionsString: '', correctAnswer: '' })} variant="outline" className="border-blue-200 text-blue-700"><Plus className="mr-2 h-4 w-4"/> Add Question</Button>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+              {quizFields.map((field, index) => (
+                <div key={field.id} className="border border-blue-100 p-4 rounded-lg bg-white space-y-3">
+                  <div className="flex justify-between"><Label className="text-blue-900 font-semibold">Question {index + 1}</Label><Button type="button" variant="ghost" size="sm" onClick={() => removeQuiz(index)} className="text-red-500 h-6"><Trash2 className="h-4 w-4"/></Button></div>
+                  <Input {...register(`quiz.${index}.question` as const, { required: true })} placeholder="Question Text" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1"><Label className="text-xs text-gray-500">Options (Comma separated)</Label><Input {...register(`quiz.${index}.optionsString` as const, { required: true })} placeholder="A, B, C, D" /></div>
+                    <div className="space-y-1"><Label className="text-xs text-gray-500">Correct Answer</Label><Input {...register(`quiz.${index}.correctAnswer` as const, { required: true })} placeholder="Correct Option" /></div>
+                  </div>
                 </div>
               ))}
             </CardContent>
