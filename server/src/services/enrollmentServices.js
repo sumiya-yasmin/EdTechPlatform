@@ -39,3 +39,11 @@ export const updateProgressService = async (userId, courseId, lessonId) => {
 
   return enrollment;
 };
+
+
+export const getAllEnrollmentsService = async () => {
+  return await Enrollment.find()
+    .populate('student', 'name email')
+    .populate('course', 'title price batches')
+    .sort({ createdAt: -1 });
+};
